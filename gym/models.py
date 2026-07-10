@@ -49,6 +49,9 @@ class TrainingSession(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
 
+    def __str__(self):
+        return f"{self.discipline}: {self.start_time}-{self.end_time}"
+
 
 class Reservation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reservations")
