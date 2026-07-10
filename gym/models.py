@@ -15,3 +15,10 @@ class Studio(models.Model):
     gym = models.ForeignKey(Gym, on_delete=models.CASCADE, related_name="studios")
     capacity = models.PositiveIntegerField()
 
+
+class Trainer(models.Model):
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
+    experience_years = models.PositiveIntegerField()
+    description = models.TextField(null=True, blank=True)
+

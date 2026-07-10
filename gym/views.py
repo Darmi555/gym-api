@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
-from gym.models import Gym, Studio
-from gym.serializers import GymSerializer, StudioSerializer
+from gym.models import Gym, Studio, Trainer
+from gym.serializers import GymSerializer, StudioSerializer, TrainerSerializer
 
 
 class GymViewSet(viewsets.ModelViewSet):
@@ -12,3 +12,10 @@ class GymViewSet(viewsets.ModelViewSet):
 class StudioViewSet(viewsets.ModelViewSet):
     queryset = Studio.objects.all()
     serializer_class = StudioSerializer
+
+
+class TrainerViewSet(viewsets.ModelViewSet):
+    queryset = Trainer.objects.all()
+    serializer_class = TrainerSerializer
+
+
