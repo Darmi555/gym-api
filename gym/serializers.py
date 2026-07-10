@@ -6,4 +6,4 @@ from gym.models import Gym
 class GymSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gym
-        fields = ["id", "name", "location", "open_time", "close_time"]
+        fields = ["id", "name", "description", "location", "open_time", "close_time"]
