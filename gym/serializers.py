@@ -1,3 +1,5 @@
+from django.contrib.postgres.operations import ValidateConstraint
+from django.core.handlers.exception import response_for_exception
 from rest_framework import serializers
 
 from gym.models import Gym, Studio, Trainer, User, Discipline, TrainingSession, Reservation
@@ -67,6 +69,15 @@ class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ["id", "user", "training_session"]
+        read_only_fields = ["user"]
+
+    def validate(self, attrs):
+        training_session = attrs["training_session"]
+        reservation_count = Reservation.objects.filter(training_session=training_session).count()
+        if reservation_count >= training_session.studio.capacity:
+            raise serializers.ValidationError("Brak wolnych miejsc")
+        return attrs
+
 
 class ReservationListSerializer(serializers.ModelSerializer):
     user = serializers.CharField(source="user.username", read_only=True)
