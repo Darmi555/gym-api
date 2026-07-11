@@ -1,6 +1,24 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+
+
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, username=None, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Użytkownik musi mieć podany email")
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, username=None, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        return self.create_user(email, username, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -9,10 +27,15 @@ class User(AbstractUser):
         STANDARD = "standard", "Standard"
         PREMIUM = "premium", "Premium"
 
+    email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=11, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     membership_level = models.CharField(choices=MembershipLevel.choices, default=MembershipLevel.BASIC, max_length=20)
 
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
+
+    objects = UserManager()
 
 
 class Gym(models.Model):
