@@ -1,4 +1,6 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from gym.models import Gym, Studio, Trainer, User, Discipline, TrainingSession, Reservation
@@ -44,6 +46,13 @@ class TrainerViewSet(viewsets.ModelViewSet):
     queryset = Trainer.objects.all()
     serializer_class = TrainerSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    @action(detail=True)
+    def sessions(self, request, pk=None):
+        trainer = self.get_object()
+        sessions = trainer.sessions.all()
+        serializer = TrainingSessionListSerializer(sessions, many=True)
+        return Response(serializer.data)
 
 
 class DisciplineViewSet(viewsets.ModelViewSet):
