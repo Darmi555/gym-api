@@ -2,7 +2,8 @@ from rest_framework import viewsets
 
 from gym.models import Gym, Studio, Trainer, User, Discipline, TrainingSession, Reservation
 from gym.serializers import GymSerializer, StudioSerializer, TrainerSerializer, UserSerializer, DisciplineSerializer, \
-    TrainingSessionSerializer, ReservationSerializer
+    TrainingSessionSerializer, ReservationSerializer, ReservationListSerializer, StudioListSerializer, \
+    TrainingSessionListSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -19,6 +20,11 @@ class StudioViewSet(viewsets.ModelViewSet):
     queryset = Studio.objects.all()
     serializer_class = StudioSerializer
 
+    def get_serializer_class(self):
+        if self.action == "list":
+            return StudioListSerializer
+        return StudioSerializer
+
 
 class TrainerViewSet(viewsets.ModelViewSet):
     queryset = Trainer.objects.all()
@@ -34,7 +40,17 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
     queryset = TrainingSession.objects.all()
     serializer_class = TrainingSessionSerializer
 
+    def get_serializer_class(self):
+        if self.action == "list":
+            return TrainingSessionListSerializer
+        return TrainingSessionSerializer
+
 
 class ReservationViewSet(viewsets.ModelViewSet):
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return ReservationListSerializer
+        return ReservationSerializer
