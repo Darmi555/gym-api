@@ -56,6 +56,18 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
             return TrainingSessionListSerializer
         return TrainingSessionSerializer
 
+    def get_queryset(self):
+        queryset = TrainingSession.objects.all()
+        dicipline_id = self.request.query_params.get("discipline")
+        date = self.request.query_params.get("date")
+
+        if dicipline_id:
+            queryset = queryset.filter(discipline_id=dicipline_id)
+        if date:
+            queryset = queryset.filter(start_time__date=date)
+
+        return queryset
+
 
 class ReservationViewSet(viewsets.ModelViewSet):
     queryset = Reservation.objects.all()

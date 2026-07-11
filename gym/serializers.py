@@ -1,5 +1,3 @@
-from django.contrib.postgres.operations import ValidateConstraint
-from django.core.handlers.exception import response_for_exception
 from rest_framework import serializers
 
 from gym.models import Gym, Studio, Trainer, User, Discipline, TrainingSession, Reservation
