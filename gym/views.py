@@ -29,7 +29,7 @@ class StudioViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action in ["list", "retrieve"]:
             return StudioListSerializer
         return StudioSerializer
 
@@ -52,7 +52,7 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action in ["list", "retrieve"]:
             return TrainingSessionListSerializer
         return TrainingSessionSerializer
 
@@ -75,7 +75,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action in ["list", "retrieve"]:
             return ReservationListSerializer
         return ReservationSerializer
 
