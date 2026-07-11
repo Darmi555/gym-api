@@ -30,7 +30,7 @@ class GymViewSet(viewsets.ModelViewSet):
 
 
 class StudioViewSet(viewsets.ModelViewSet):
-    queryset = Studio.objects.all()
+    queryset = Studio.objects.all().select_related("gym")
     serializer_class = StudioSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -63,7 +63,7 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
         return TrainingSessionSerializer
 
     def get_queryset(self):
-        queryset = TrainingSession.objects.all()
+        queryset = TrainingSession.objects.all().prefetch_related("reservations").select_related("discipline", "studio", "trainer")
         dicipline_id = self.request.query_params.get("discipline")
         date = self.request.query_params.get("date")
 
