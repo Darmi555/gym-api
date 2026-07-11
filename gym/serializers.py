@@ -26,6 +26,14 @@ class StudioSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "gym", "capacity"]
 
 
+class StudioListSerializer(serializers.ModelSerializer):
+    gym = serializers.CharField(source="gym.__str__", read_only=True)
+
+    class Meta:
+        model = Studio
+        fields = ["id","name", "gym", "description"]
+
+
 class TrainerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trainer
@@ -43,8 +51,28 @@ class TrainingSessionSerializer(serializers.ModelSerializer):
         model = TrainingSession
         fields = ["id", "trainer", "discipline", "studio", "start_time", "end_time"]
 
+class TrainingSessionListSerializer(serializers.ModelSerializer):
+    trainer = serializers.CharField(source="trainer.__str__", read_only=True)
+    discipline = serializers.CharField(source="discipline.__str__", read_only=True)
+    studio = serializers.CharField(source="studio.__str__", read_only=True)
+    start_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    end_time = serializers.DateTimeField(format="%H:%M")
+
+    class Meta:
+        model = TrainingSession
+        fields = ["id", "trainer", "discipline", "studio", "start_time", "end_time"]
+
 
 class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ["id", "user", "training_session"]
+
+class ReservationListSerializer(serializers.ModelSerializer):
+    user = serializers.CharField(source="user.username", read_only=True)
+    training_session = serializers.CharField(source="training_session.__str__", read_only=True)
+
+    class Meta:
+        model = Reservation
+        fields = ["id", "user", "training_session"]
+
