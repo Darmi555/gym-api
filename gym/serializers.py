@@ -15,6 +15,13 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
 
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
 
 class GymSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,7 +32,7 @@ class GymSerializer(serializers.ModelSerializer):
 class StudioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Studio
-        fields = ["id", "name", "gym", "capacity"]
+        fields = ["id", "name", "gym", "capacity", "description"]
 
 
 class StudioListSerializer(serializers.ModelSerializer):
@@ -33,7 +40,7 @@ class StudioListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Studio
-        fields = ["id","name", "gym", "description"]
+        fields = ["id","name", "gym", "capacity", "description"]
 
 
 class TrainerSerializer(serializers.ModelSerializer):

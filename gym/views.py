@@ -87,8 +87,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Reservation.objects.all()
-        return Reservation.objects.filter(user=self.request.user)
+            return Reservation.objects.all().select_related("user", "training_session__discipline")
+        return Reservation.objects.filter(user=self.request.user).select_related("user", "training_session__discipline")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
