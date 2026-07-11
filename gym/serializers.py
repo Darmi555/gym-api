@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from gym.models import Gym, Studio, Trainer, User, Discipline, TrainingSession, Reservation
@@ -57,10 +59,14 @@ class TrainingSessionListSerializer(serializers.ModelSerializer):
     studio = serializers.CharField(source="studio.__str__", read_only=True)
     start_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     end_time = serializers.DateTimeField(format="%H:%M")
+    available_places = serializers.SerializerMethodField()
+
+    def get_available_places(self, obj):
+        return obj.studio.capacity - obj.reservations.count()
 
     class Meta:
         model = TrainingSession
-        fields = ["id", "trainer", "discipline", "studio", "start_time", "end_time"]
+        fields = ["id", "trainer", "discipline", "studio", "start_time", "end_time", "available_places"]
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -71,9 +77,15 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         training_session = attrs["training_session"]
+        user = self.context["request"].user
+
         reservation_count = Reservation.objects.filter(training_session=training_session).count()
         if reservation_count >= training_session.studio.capacity:
             raise serializers.ValidationError("Brak wolnych miejsc")
+        if Reservation.objects.filter(user=user, training_session=training_session).exists():
+            raise serializers.ValidationError("Posiadasz już zarezerwowaną sesję na te zajęcia")
+        if training_session.start_time < timezone.now():
+            raise serializers.ValidationError("Zajęcią już sie odbyły")
         return attrs
 
 
