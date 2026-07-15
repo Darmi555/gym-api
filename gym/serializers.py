@@ -60,6 +60,17 @@ class TrainingSessionSerializer(serializers.ModelSerializer):
         model = TrainingSession
         fields = ["id", "trainer", "discipline", "studio", "start_time", "end_time"]
 
+    def validate(self, attrs):
+        start_time = attrs.get("start_time")
+        end_time = attrs.get("end_time")
+
+        if start_time and start_time < timezone.now():
+            raise serializers.ValidationError("Sesja nie może odbyć się w przeszłości")
+        if start_time and end_time and start_time >= end_time:
+            raise serializers.ValidationError("Sesja nie może zaczynać się później niż kończyć")
+        return attrs
+
+
 class TrainingSessionListSerializer(serializers.ModelSerializer):
     trainer = serializers.CharField(source="trainer.__str__", read_only=True)
     discipline = serializers.CharField(source="discipline.__str__", read_only=True)
