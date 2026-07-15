@@ -37,6 +37,9 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    class Meta(AbstractUser.Meta):
+        ordering = ["id"]
+
 
 class Gym(models.Model):
     name = models.CharField(max_length=128)
@@ -44,6 +47,9 @@ class Gym(models.Model):
     location = models.CharField(max_length=128)
     open_time = models.TimeField()
     close_time = models.TimeField()
+
+    class Meta:
+        ordering = ["name", "id"]
 
     def __str__(self):
         return f"{self.name} ({self.location})"
@@ -55,6 +61,9 @@ class Studio(models.Model):
     gym = models.ForeignKey(Gym, on_delete=models.CASCADE, related_name="studios")
     capacity = models.PositiveIntegerField()
 
+    class Meta:
+        ordering = ["name", "id"]
+
     def __str__(self):
         return self.name
 
@@ -65,6 +74,9 @@ class Trainer(models.Model):
     experience_years = models.PositiveIntegerField()
     description = models.TextField(null=True, blank=True)
 
+    class Meta:
+        ordering = ["last_name", "first_name", "id"]
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
@@ -72,6 +84,9 @@ class Trainer(models.Model):
 class Discipline(models.Model):
     name = models.CharField(max_length=128)
     description = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["name", "id"]
 
     def __str__(self):
         return self.name
@@ -84,6 +99,9 @@ class TrainingSession(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
 
+    class Meta:
+        ordering = ["start_time", "id"]
+
     def __str__(self):
         return f"{self.discipline}: {self.start_time.strftime('%H:%M')}-{self.end_time.strftime('%H:%M --- %Y-%m-%d ')}"
 
@@ -94,6 +112,7 @@ class Reservation(models.Model):
     training_session = models.ForeignKey(TrainingSession, on_delete=models.CASCADE, related_name="reservations")
 
     class Meta:
+        ordering = ["id"]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "training_session"],
