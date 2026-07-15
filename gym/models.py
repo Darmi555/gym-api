@@ -92,3 +92,11 @@ class TrainingSession(models.Model):
 class Reservation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reservations")
     training_session = models.ForeignKey(TrainingSession, on_delete=models.CASCADE, related_name="reservations")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "training_session"],
+                name="unique_user_session",
+            )
+        ]
