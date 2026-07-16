@@ -1,11 +1,11 @@
-from datetime import time
-
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework.test import APITestCase
 from rest_framework import status
 
 from django.contrib.auth import get_user_model
 
-from gym.models import Gym
+from gym.models import Gym, Trainer, Discipline, Studio, TrainingSession
 
 User = get_user_model()
 
@@ -70,7 +70,58 @@ class GymApiTest(APITestCase):
         self.assertEqual(Gym.objects.count(), 2)
 
 
+class TrainerAPiTest(APITestCase):
+    def setUp(self):
+        self.trainer1 = Trainer.objects.create(
+            first_name="test1",
+            last_name="test2",
+            experience_years=7
+        )
+        self.trainer2 = Trainer.objects.create(
+            first_name="test2",
+            last_name="test3",
+            experience_years=5
+        )
+        self.discipline = Discipline.objects.create(
+            name="testdiscipline",
+        )
+        self.gym = Gym.objects.create(
+            name="testgym",
+            description="testgym description",
+            location="testgym location",
+            open_time="10:00",
+            close_time="20:00",
+        )
+        self.studio = Studio.objects.create(
+            name="teststudio",
+            description="teststudio description",
+            gym=self.gym,
+            capacity=30,
+        )
+        self.trainingsession1 = TrainingSession.objects.create(
+            trainer=self.trainer1,
+            discipline=self.discipline,
+            studio=self.studio,
+            start_time=timezone.now() + timedelta(hours=1),
+            end_time=timezone.now() + timedelta(hours=5),
+        )
+        self.trainingsession2 = TrainingSession.objects.create(
+            trainer=self.trainer2,
+            discipline=self.discipline,
+            studio=self.studio,
+            start_time=timezone.now() + timedelta(hours=2),
+            end_time=timezone.now() + timedelta(hours=7),
+        )
 
+    def test_trainer_custom_action_endpoint(self):
+        response = self.client.get(f"/api/gym/trainers/{self.trainer1.id}/sessions/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["trainer"], str(self.trainer1))
+        response = self.client.get(f"/api/gym/trainers/{self.trainer2.id}/sessions/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["trainer"], str(self.trainer2))
 
 
 class UnauthenticatedReservationApiTest(APITestCase):
