@@ -237,8 +237,7 @@ class TrainingSessionTest(APITestCase):
             discipline=self.discipline2,
             studio=self.studio,
             start_time=now + timedelta(days=2),
-            end_time=now + timedelta(days=6),
-
+            end_time=now + timedelta(days=6)
         )
         response = self.client.get(f"/api/gym/training-sessions/?date={now.date()}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -263,7 +262,157 @@ class TrainingSessionTest(APITestCase):
         self.assertEqual(response.data["available_places"], 29)
 
 
-class UnauthenticatedReservationApiTest(APITestCase):
-    def test_auth_required(self):
+class ReservationApiTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="user@test.com", username="user", password="pass12345"
+        )
+        self.admin = User.objects.create_superuser(
+            email="admin@test.com", username="admin", password="pass12345"
+        )
+        self.discipline = Discipline.objects.create(
+            name="testdiscipline",
+        )
+        self.discipline2 = Discipline.objects.create(
+            name="testdiscipline2",
+        )
+        self.trainer = Trainer.objects.create(
+            first_name="test_first",
+            last_name="test_last",
+            experience_years=10
+        )
+        self.gym = Gym.objects.create(
+            name="testgym",
+            description="testgym description",
+            location="testgym location",
+            open_time="10:00",
+            close_time="20:00",
+        )
+
+    def test_create_reservation_with_success(self):
+        self.client.force_authenticate(self.user)
+        now = timezone.now() + timedelta(hours=1)
+        studio = Studio.objects.create(
+            name="teststudio",
+            description="teststudio description",
+            gym=self.gym,
+            capacity=30,
+        )
+        training_session = TrainingSession.objects.create(
+            trainer=self.trainer,
+            discipline=self.discipline,
+            studio=studio,
+            start_time=now,
+            end_time=now + timedelta(days=5),
+        )
+        response = self.client.post("/api/gym/reservations/",data={
+                "training_session":training_session.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reservation.objects.count(), 1)
+        reservation = Reservation.objects.first()
+        self.assertEqual(reservation.user, self.user)
+
+    def test_create_reservation_with_no_available_places(self):
+        self.client.force_authenticate(self.user)
+        now = timezone.now() + timedelta(hours=1)
+        studio = Studio.objects.create(
+            name="teststudio",
+            description="teststudio description",
+            gym=self.gym,
+            capacity=0,
+        )
+        training_session = TrainingSession.objects.create(
+            trainer=self.trainer,
+            discipline=self.discipline,
+            studio=studio,
+            start_time=now,
+            end_time=now + timedelta(days=5),
+        )
+        response = self.client.post("/api/gym/reservations/",data={
+                "training_session":training_session.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reservation.objects.count(), 0)
+
+    def test_create_double_reservation(self):
+        self.client.force_authenticate(self.user)
+        now = timezone.now() + timedelta(hours=1)
+        studio = Studio.objects.create(
+            name="teststudio",
+            description="teststudio description",
+            gym=self.gym,
+            capacity=5,
+        )
+        training_session = TrainingSession.objects.create(
+            trainer=self.trainer,
+            discipline=self.discipline,
+            studio=studio,
+            start_time=now,
+            end_time=now + timedelta(days=5),
+        )
+        response = self.client.post("/api/gym/reservations/",data={
+                "training_session":training_session.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reservation.objects.count(), 1)
+        response = self.client.post("/api/gym/reservations/",data={
+                "training_session":training_session.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reservation.objects.count(), 1)
+
+    def test_create_reservation_in_past(self):
+        self.client.force_authenticate(self.user)
+        now = timezone.now() - timedelta(hours=1)
+        studio = Studio.objects.create(
+            name="teststudio",
+            description="teststudio description",
+            gym=self.gym,
+            capacity=5,
+        )
+        training_session = TrainingSession.objects.create(
+            trainer=self.trainer,
+            discipline=self.discipline,
+            studio=studio,
+            start_time=now,
+            end_time=now + timedelta(days=5),
+        )
+        response = self.client.post("/api/gym/reservations/",data={
+                "training_session":training_session.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reservation.objects.count(), 0)
+
+    def test_reservation_list_shows_only_own(self):
+        now = timezone.now() + timedelta(hours=1)
+        studio = Studio.objects.create(
+            name="teststudio",
+            description="teststudio description",
+            gym=self.gym,
+            capacity=5,
+        )
+        training_session = TrainingSession.objects.create(
+            trainer=self.trainer,
+            discipline=self.discipline,
+            studio=studio,
+            start_time=now,
+            end_time=now + timedelta(days=5),
+        )
+        user2 = User.objects.create_user(
+            email="user2@test.com", username="user2", password="pass12345"
+        )
+        Reservation.objects.create(user=self.user, training_session=training_session)
+        Reservation.objects.create(user=user2, training_session=training_session)
+        self.client.force_authenticate(self.user)
         response = self.client.get("/api/gym/reservations/")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["user"], self.user.username)
+
+
